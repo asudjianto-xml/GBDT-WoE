@@ -1,0 +1,48 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs,tabularx,array,graphicx}
+\usepackage{microtype,xcolor,enumitem}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{xurl,hyperref}
+\definecolor{navy}{RGB}{28,55,90}
+\hypersetup{colorlinks=true,linkcolor=navy,citecolor=navy,urlcolor=navy,
+ pdftitle={Conditional Weight of Evidence for Gradient-Boosted Credit Models},
+ pdfauthor={Agus Sudjianto and Denis Burakov}}
+\setlength{\parskip}{5pt}
+\setlength{\parindent}{0pt}
+\setlength{\emergencystretch}{2em}
+\setlist{nosep,leftmargin=*}
+\newtheorem{proposition}{Proposition}
+\newtheorem{definition}{Definition}
+\newcommand{\Prb}{\mathbb P}
+\newcommand{\E}{\mathbb E}
+\newcommand{\ind}{\mathbf 1}
+\newcommand{\logit}{\operatorname{logit}}
+\newcommand{\sig}{\sigma}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{R}{>{\raggedleft\arraybackslash}X}
+
+\title{\textbf{Conditional Weight of Evidence for Gradient-Boosted Credit Models}\\[4pt]
+\large Estimation, Additivity and Its Relation to Adverse Action Reasons}
+\author{Agus Sudjianto \and Denis Burakov}
+\date{October 2026}
+
+\begin{document}
+\maketitle
+
+\input{sections/abstract}
+
+\textbf{Keywords:} weight of evidence; credit scoring; gradient boosting; adverse action; Shapley value; leaf proximity.
+
+\input{sections/body}
+
+\clearpage
+\appendix
+\input{sections/computational_appendix}
+\input{sections/validation_appendix}
+\clearpage
+\input{sections/references}
+\end{document}

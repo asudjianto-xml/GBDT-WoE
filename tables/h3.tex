@@ -1,0 +1,17 @@
+\begin{table}[t]\centering\small
+\caption{Prediction of an unstable leading reason from the attribution margin alone and with the leading block's evidence added. Out-of-fold AUC; the simulation uses leave-one-replicate-out folds and 40 bootstrap refits per replicate; HELOC uses folds grouped by applicant and 10 refits. Intervals are 95 percent cluster-bootstrap intervals (2{,}000 resamples of applicants) for the paired difference in out-of-fold AUC; they do not include refitting of the classifiers.}
+\label{tab:h3}
+\resizebox{\linewidth}{!}{\begin{tabular}{@{}llrrrrr@{}}\toprule
+Data and outcome & Classifier & Rate & Margin & + estimated evidence & Difference (95\% interval) & + oracle evidence\\\midrule
+Simulation, agreement $<0.7$ & logistic & 0.239 & 0.911 & 0.910 & $-$0.001 [$-$0.003, +0.001] & 0.910\\
+ & GBDT & 0.239 & 0.906 & 0.901 & $-$0.005 [$-$0.010, $-$0.001] & 0.904\\
+Simulation, agreement $<0.8$ & logistic & 0.304 & 0.919 & 0.919 & 0.000 [$-$0.001, +0.001] & 0.919\\
+ & GBDT & 0.304 & 0.914 & 0.914 & $-$0.001 [$-$0.004, +0.002] & 0.916\\
+Simulation, agreement $<0.9$ & logistic & 0.396 & 0.929 & 0.929 & $-$0.001 [$-$0.002, 0.000] & 0.930\\
+ & GBDT & 0.396 & 0.922 & 0.920 & $-$0.002 [$-$0.005, +0.002] & 0.920\\
+Simulation, differs from true model & logistic & 0.068 & 0.921 & 0.920 & $-$0.001 [$-$0.006, +0.004] & 0.925\\
+ & GBDT & 0.068 & 0.906 & 0.910 & +0.003 [$-$0.006, +0.012] & 0.910\\
+HELOC, agreement $<0.8$ & logistic & 0.459 & 0.840 & 0.840 & 0.000 [$-$0.002, +0.001] & --\\
+ & GBDT & 0.459 & 0.834 & 0.835 & 0.000 [$-$0.003, +0.004] & --\\
+\bottomrule\end{tabular}}
+\end{table}

@@ -1,0 +1,18 @@
+\section{Calibration and library comparisons}\label{app:calibration}
+
+Calibration describes the probability scale on which the evidence estimates depend. The full and direct reduced models are Platt-recalibrated on a separate sample; projection models learn those full-model probabilities without separate outcome recalibration. The production model's test diagnostics are reported in Table~\ref{tab:calibration}.
+
+In the simulation, the unrecalibrated margin has test calibration slope 1.00--1.02 and the fitted Platt slope is 1.00--1.03. After recalibration the test slope is 0.97--1.02, the intercept is $-0.03$ to $0.02$ and decile expected calibration error is at most 0.005. Mean bias against true log odds ranges from $-0.025$ to $0.047$, with regression slope of true on fitted log odds 0.99--1.01. Among declines, predicted default probability averages 0.32--0.33 versus true probability 0.32, and the true-on-fitted log-odds slope is 1.04--1.08. These aggregate agreements coexist with the applicant-level errors in the main text.
+
+\input{tables/calibration}
+
+\subsection{Gradient-boosting libraries}
+
+LightGBM and CatBoost fitted with the same depth, learning rate and stopping rule reach test AUCs of 0.862 to 0.869 and 0.863 to 0.869. Their direct conditional evidence estimates have RMSE between 0.17 and 0.21 (LightGBM) and between 0.12 and 0.16 (CatBoost) across blocks, comparable to the 0.15 to 0.21 of XGBoost. Against the same applicants and references, the leading candidate reason agrees with the XGBoost model's leading reason for 95 to 97 percent of applicants under LightGBM and 94 to 96 percent under CatBoost, and with the true model's leading reason for 92 to 96 and 93 to 95 percent. Of the XGBoost score-band references, 87 percent pass under the LightGBM model and 78 to 82 percent under the CatBoost model at the same approval rate, so the choice of library changes which records qualify as passing references more than it changes the attribution against a fixed reference set.
+
+
+\section{Zero-evidence baselines and error decomposition}\label{app:errors}
+
+\input{sections/diagnostic_details}
+\input{tables/error_decomposition}
+\input{tables/decline_accuracy}

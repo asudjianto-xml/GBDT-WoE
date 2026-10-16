@@ -1,0 +1,19 @@
+__pycache__/
+.ipynb_checkpoints/
+build/
+*.aux
+*.log
+*.out
+
+# Not part of the public repository
+build_manuscript.py
+gbdt_woe_single.tex
+gbdt_woe_single.pdf
+gbdt_woe_abstract_proposed.tex
+gbdt_woe_rewrite_notes.md
+gbdt_woe_*review*.md
+
+# Run logs, smoke-test output and the downloaded HELOC file
+results/*.txt
+results/*_quick.*
+results/heloc_openml45023.csv

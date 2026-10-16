@@ -1,0 +1,14 @@
+\begin{table}[t]\centering\small
+\caption{FICO HELOC data, ten random splits. Correlations are across test applicants within a split, averaged over splits. Means of $E_j$, $W_j$ and the attribution $C^f_j$ are over declined applicants. Estimated evidence uses the projection estimator.}
+\label{tab:heloc}
+\resizebox{\linewidth}{!}{\begin{tabular}{@{}lrrrrrr@{}}\toprule
+& Delinq. & File age & Trades & Inquiries & Revolving & Install.\\\midrule
+Corr(direct, projection) & 0.84 & 0.72 & 0.50 & 0.76 & 0.87 & 0.35\\
+Corr(projection, leaf-local default geometry) & 0.75 & 0.58 & 0.14 & 0.48 & 0.76 & 0.04\\
+Corr(leaf-local default geometry, global WoE) & 0.93 & 0.89 & 0.69 & 0.92 & 0.95 & 0.46\\\midrule
+Mean coalition evidence $E_j$ & 0.30 & 0.15 & 0.09 & 0.13 & 0.37 & 0.02\\
+Mean leave-one-block-out $W_j$ & 0.30 & 0.14 & 0.04 & 0.13 & 0.33 & 0.04\\
+Mean attribution $C^f_j$ & 0.37 & 0.22 & 0.11 & 0.18 & 0.36 & 0.01\\
+Leading-reason share & 0.39 & 0.20 & 0.04 & 0.06 & 0.32 & 0.00\\
+\bottomrule\end{tabular}}
+\end{table}

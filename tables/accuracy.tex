@@ -1,0 +1,24 @@
+\begin{table}[t]\centering\small
+\caption{Error of conditional evidence estimates against the oracle in the bureau-style simulation: root mean squared error (logit units), mean over five replicates, for about 3{,}350 combined evaluation applicants per replicate. Direct and projection estimates are compared with the pointwise evidence $W_j$ and the global and leaf-local estimates with the class-level evidence $W^B_j$; errors in different panels refer to different targets and are not compared with each other. The first two rows give the standard deviation of the oracle across applicants. Zero-evidence baselines assign zero to every applicant for each target. Replicate standard deviations of the RMSE are at most 0.02 for direct and projection estimates and at most 0.07 for leaf-local estimates.}
+\label{tab:accuracy}
+\resizebox{\linewidth}{!}{\begin{tabular}{@{}lrrrrrr@{}}\toprule
+& Revolving & Delinq. & File age & Seeking & Install. & Public rec.\\\midrule
+Oracle sd, pointwise $W_j$ & 0.51 & 0.78 & 0.31 & 0.29 & 0.10 & 0.20\\
+Oracle sd, class-level $W^B_j$ & 0.46 & 0.68 & 0.29 & 0.26 & 0.09 & 0.20\\\midrule
+Zero evidence, pointwise target & 0.51 & 0.79 & 0.31 & 0.29 & 0.10 & 0.20\\
+Direct & 0.20 & 0.21 & 0.19 & 0.17 & 0.15 & 0.16\\
+Projection & 0.17 & 0.18 & 0.13 & 0.13 & 0.09 & 0.10\\\midrule
+Zero evidence, class-level target & 0.47 & 0.69 & 0.29 & 0.26 & 0.09 & 0.20\\
+Global WoE of class & 0.97 & 0.59 & 0.38 & 0.63 & 0.78 & 0.12\\
+Leaf-local, default geometry, $\kappa=1$ & 0.72 & 0.42 & 0.33 & 0.46 & 0.61 & 0.10\\
+Leaf-local, default geometry, selected $\kappa$ & 0.27 & 0.16 & 0.28 & 0.19 & 0.23 & 0.07\\
+Leaf-local, class geometry, $\kappa=1$ & 0.71 & 0.42 & 0.33 & 0.40 & 0.53 & 0.08\\
+Leaf-local, class geometry, selected $\kappa$ & 0.24 & 0.16 & 0.22 & 0.14 & 0.18 & 0.05\\
+\midrule
+Sign agreement$^{a}$, projection & 0.99 & 1.00 & 0.99 & 0.99 & 0.96 & 1.00\\
+Sign agreement, global WoE & 0.90 & 0.96 & 0.28 & 0.97 & -- & 1.00\\
+Sign agreement, leaf-local (class, selected) & 0.99 & 1.00 & 0.94 & 0.99 & -- & 1.00\\
+Share with $|W_j|>0.25$ & 0.55 & 0.76 & 0.24 & 0.37 & 0.01 & 0.05\\
+\bottomrule\end{tabular}}
+\par\smallskip\raggedright\footnotesize $^{a}$Share of applicants with $|$oracle$|>0.25$ whose estimate has the oracle's sign; -- indicates 20 or fewer such applicants. The qualifying records can differ between the two targets.
+\end{table}

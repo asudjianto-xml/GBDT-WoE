@@ -1,0 +1,21 @@
+\begin{table}[t]\centering\small
+\caption{Calibration of the production model on the test sample: ranges over five simulation replicates and ten HELOC splits. The calibration slope and intercept are from a logistic regression of the outcome on the model's log odds (intercept with slope fixed at one). The lower panel compares the simulation model with the true log odds, for all test applicants and for applicants above the cutoff.}
+\label{tab:calibration}
+\begin{tabular}{@{}lrr@{}}\toprule
+& Simulation & HELOC\\\midrule
+Platt slope $b$ & 1.00 to 1.03 & 0.81 to 1.18\\
+Calibration slope before Platt & 1.00 to 1.02 & 0.91 to 1.08\\
+Calibration slope & 0.97 to 1.02 & 0.87 to 1.14\\
+Calibration intercept & $-$0.03 to 0.02 & $-$0.19 to 0.08\\
+Expected calibration error (deciles) & 0.002 to 0.005 & 0.021 to 0.047\\
+Mean predicted probability & 0.087 to 0.092 & 0.484 to 0.528\\
+Observed default rate & 0.086 to 0.091 & 0.478 to 0.512\\
+\midrule
+Bias against true log odds, all & $-$0.025 to 0.047 & --\\
+Slope of true on fitted log odds, all & 0.991 to 1.012 & --\\
+Bias against true log odds, declined & $-$0.008 to 0.049 & --\\
+Slope of true on fitted log odds, declined & 1.039 to 1.076 & --\\
+Mean predicted probability, declined & 0.321 to 0.332 & --\\
+Mean true probability, declined & 0.317 to 0.323 & --\\
+\bottomrule\end{tabular}
+\end{table}

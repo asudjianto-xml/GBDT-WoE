@@ -1,0 +1,71 @@
+\section{Experimental design}\label{sec:design}
+
+\subsection{Simulated bureau data}
+
+Evaluating an estimator of conditional evidence requires the true value of $W_j(x)$ for each applicant, which is not available in real data. The simulation is therefore constructed so that $\Prb(Y=1\mid x_S)$ can be computed for every subset of blocks. Three correlated latent factors represent financial stress $s$, credit maturity $m$ and credit seeking $q$, with $\operatorname{corr}(s,m)=-0.20$, $\operatorname{corr}(s,q)=0.35$ and $\operatorname{corr}(m,q)=-0.15$. Six characteristic blocks are generated independently given the factors (Table~\ref{tab:blocks}). The blocks are therefore dependent through the factors, and every block likelihood $p(x_k\mid s,m,q)$ has a closed form.
+
+\begin{table}[t]
+\centering\small
+\caption{Characteristic blocks of the bureau-style simulation. Each block is generated from the latent factors (stress $s$, maturity $m$, credit seeking $q$) and independent noise. $\mathrm{Pois}$, $\mathrm{Bin}$ and $\mathrm{Geom}$ denote Poisson, binomial and geometric draws; $\varepsilon$ is standard normal noise drawn separately for each quantity.}
+\label{tab:blocks}
+\begin{tabularx}{\linewidth}{@{}p{0.17\linewidth}p{0.30\linewidth}Y@{}}
+\toprule
+Block & Fields & Generation given the factors\\\midrule
+Revolving & limit, balance, utilization & $\log\text{limit}=\log 14000+0.45m-0.15s+0.4\varepsilon$; $\logit\text{util}=-0.7+s+0.3q+0.6\varepsilon$; balance $=$ util $\times$ limit\\
+Delinquency & accounts 30+, 60+, 90+ days past due; months since delinquency & $n_{30}\sim\mathrm{Pois}(0.25e^{0.8s+0.25q})$; $n_{60}\sim\mathrm{Bin}(n_{30},0.4)$; $n_{90}\sim\mathrm{Bin}(n_{60},0.4)$; months since $\sim\min(\mathrm{Geom}(0.08),60)$ if $n_{30}>0$\\
+File age & oldest and average trade age (months) & $\log(\text{oldest}-6)=\log 70+0.8m-0.15s+0.35\varepsilon$; average $=$ oldest $\times(0.25+0.55\,\mathrm{Beta}(3,2))$\\
+Credit seeking & inquiries and new accounts in 6 months & inquiries $\sim\mathrm{Pois}(e^{0.1+0.4s+0.5q})$; new $\sim\mathrm{Bin}(\text{inquiries},0.35)$\\
+Installment & original amount, balance, fraction outstanding & $\log\text{original}=\log18000+0.4m+0.4\varepsilon$; $\logit\text{fraction}=0.1+0.5s+0.5\varepsilon$\\
+Public record & indicator & $\Prb(\text{record})=\sig(-3.3+0.8s)$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Default depends on the observed record only, through the log odds
+\begin{multline}\label{eq:truth}
+f^\ast(x)=-5.2+(2.6-3.4\,\tau)\,u+u^2+0.30n_{30}+0.40n_{60}+0.60n_{90}+0.8\,\ind\{n_{30}>0\}e^{-\text{months since}/12}\\
++0.30\log(1+\text{inq})+0.20\,\text{new}+0.9\,\text{record}+0.8\,\text{fraction}-0.25\log(\text{limit}/14000)+0.6\,\tau+u\,\ind\{n_{60}>0\},
+\end{multline}
+where $u$ is utilization and $\tau=\sig\{(48-\text{oldest})/8\}$ is a smooth indicator of a file younger than about four years. Holding the limit and the fields of the other blocks fixed, so that the balance changes with utilization, the derivative of the log odds with respect to utilization is
+\[
+\partial f^\ast/\partial u=2.6-3.4\tau+2u+\ind\{n_{60}>0\}.
+\]
+For established files ($\tau$ near zero) it is positive throughout. Without serious delinquency it is negative when $u<(3.4\tau-2.6)/2$, which requires $\tau>2.6/3.4$, that is, a file younger than about 39 months; as $\tau$ approaches one the condition becomes $u<0.4$. With serious delinquency the derivative is positive throughout. At 47 months, for example, $\tau=0.53$ and the derivative is $0.79+2u$, positive at every utilization. At fixed utilization, $\partial f^\ast/\partial\tau=0.6-3.4u$, so a younger file raises risk when utilization is below about 0.18 and lowers it above. These interactions are built in so that the effect of a characteristic depends on the rest of the record, which a marginal WoE cannot represent. Neither derivative equals the conditional evidence of a block, which also depends on the conditional distribution of the omitted block given the others. The through-the-door default rate is 8.7 percent, and 29 percent of records have $\tau>0.5$.
+
+Because $\Prb(Y=1\mid x)=\sig(f^\ast(x))$, the conditional probability given a subset of blocks is
+\[
+\Prb(Y=1\mid x_S)=\int \sig\bigl(f^\ast(x_S,x_{-S})\bigr)\,p(x_{-S}\mid s,m,q)\,p(s,m,q\mid x_S)\,d x_{-S}\,d(s,m,q).
+\]
+The numerical integration, convergence checks and fitting settings are given in Appendix~\ref{app:computation}.
+
+An earlier approval policy books an applicant with probability $s(x)=\Phi\{(1.55-\ell(x))/0.5\}$, where $\ell(x)=2u+0.5n_{30}+0.8\,\text{record}+0.3\log(1+\text{inq})$. It books 69 percent of applicants, whose default rate is 3.3 percent. It uses the revolving, delinquency, credit-seeking and public-record blocks but not file age or installment debt. An applicant is called declined by the earlier policy when $s(x)<0.5$, that is $\ell(x)>1.55$; 35 percent of test applicants fall in this group.
+
+Five independent replicates (seeds 1 to 5) each contain 300{,}000 records divided into disjoint samples (Table~\ref{tab:samples}). Model fitting, calibration, estimation of the reference distribution and evaluation use separate records. In particular, the full model supplies projection targets on an evidence sample it did not train on; local-frequency tuning uses records outside the counts sample.
+
+Evidence accuracy is evaluated on the union of 3{,}000 random test records and 400 sampled declines, with duplicates removed. This deliberately enriches the evaluation for the decision of interest. Its aggregate errors describe that mixture rather than the applicant population. We also report accuracy separately for the 400 sampled declines; the reference sample sets a cutoff declining the riskiest 20 percent.
+
+\begin{table}[t]
+\centering\small
+\caption{Samples of each simulation replicate and their roles.}
+\label{tab:samples}
+\begin{tabularx}{\linewidth}{@{}lrY@{}}
+\toprule
+Sample & Records & Role\\\midrule
+Development & 100{,}000 & production model, block-excluded models, geometry models, block classes\\
+Calibration & 25{,}000 & Platt recalibration of full and outcome-fitted reduced models; choice of $(\kappa,\lambda)$ on 4{,}000 records\\
+Evidence & 100{,}000 & projection regressions; leaf-local counts; $\hat\pi$\\
+Reference & 50{,}000 & cutoff (riskiest 20 percent declined) and passing band (0.3 in log odds below the cutoff)\\
+Test & 25{,}000 & 3{,}000 random applicants and 400 declined applicants at which evidence and attribution are evaluated\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The library comparison refits the full and block-excluded models with LightGBM \citep{lightgbm} and CatBoost \citep{catboost} under the same depth, learning rate and early-stopping rule, and evaluates the same applicants and references.
+
+\subsection{FICO HELOC data}
+
+The FICO HELOC data provide bureau-derived characteristics and a binary outcome indicating 90 or more days past due \citep{heloc}. The OpenML version has 10{,}000 records, equally divided between good and bad outcomes; its 50 percent default rate reflects the data-set sampling rather than a portfolio. Removing 557 records without bureau information leaves 9{,}443. We exclude the consolidated bureau risk estimate and group the remaining 21 fields into delinquency (five), file age (three), trade volume and mix (four), inquiries (three), revolving burden (four) and installment burden (two).
+
+The study imposes a score cutoff approving half of the reference sample. A HELOC ``decline'' below is a classification under this study rule, not an observed historical lending decision. Ten random splits allocate 40 percent of records to development, 10 percent to calibration, 25 percent to evidence estimation, 10 percent to references and 15 percent to test. Each declined applicant is compared with 30 references from the passing band. Applicants can recur across test splits; the split-level summaries therefore do not represent ten independent applicant samples.
+
+Special values ($-7$, $-8$) enter the trees as ordinary values; coarse classing uses the nonnegative value and a special-value indicator for each field. This preserves the supplied codes but allows tree splits to use their ordering. Sensitivity to alternative missing-value handling is not evaluated. Without a population oracle, the HELOC analysis reports estimator agreement and local-estimation diagnostics; evidence accuracy is assessed in the simulation.

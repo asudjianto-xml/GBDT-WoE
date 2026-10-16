@@ -1,0 +1,18 @@
+\begin{table}[t]\centering\small
+\caption{Coalition evidence of the 400 declined applicants per replicate and the effect of the earlier approval policy, means over five replicates (logit units). The coalition excess is $H_j=E_j-W_j$. The absolute booked-minus-through-the-door difference $|W^b_j-W_j|$ is computed from the oracle for the test applicants; earlier-policy declines are applicants with booking probability $s(x)<0.5$ and current-model declines are applicants with $f(x)>c$. The last three rows give the RMSE of direct estimates fitted on booked accounts only, against the through-the-door and booked oracles, and of direct estimates fitted on all applicants against the through-the-door oracle.}
+\label{tab:coalition}
+\resizebox{\linewidth}{!}{\begin{tabular}{@{}lrrrrrr@{}}\toprule
+& Revolving & Delinq. & File age & Seeking & Install. & Public rec.\\\midrule
+Coalition evidence $E_j$, oracle mean & 0.43 & 0.62 & 0.05 & 0.19 & 0.12 & 0.05\\
+Leave-one-block-out $W_j$, oracle mean & 0.19 & 0.47 & 0.07 & 0.05 & 0.00 & 0.03\\
+Coalition excess $H_j$, oracle mean & 0.24 & 0.15 & $-$0.02 & 0.14 & 0.12 & 0.01\\
+RMSE of projection estimate of $E_j$ & 0.09 & 0.18 & 0.07 & 0.08 & 0.05 & 0.06\\
+Oracle sd of $E_j$ & 0.68 & 1.14 & 0.28 & 0.57 & 0.35 & 0.35\\\midrule
+$|W^b_j-W_j|$, all test applicants & 0.23 & 0.35 & 0.00 & 0.08 & 0.00 & 0.05\\
+$|W^b_j-W_j|$, earlier-policy declines & 0.47 & 0.75 & 0.00 & 0.21 & 0.00 & 0.09\\
+$|W^b_j-W_j|$, current-model declines & 0.54 & 0.74 & 0.00 & 0.22 & 0.00 & 0.09\\
+Direct, booked fit vs.\ through-the-door oracle & 0.40 & 0.50 & 0.27 & 0.26 & 0.22 & 0.25\\
+Direct, booked fit vs.\ booked oracle & 0.31 & 0.40 & 0.27 & 0.26 & 0.22 & 0.26\\
+Direct, all-applicant fit vs.\ through-the-door oracle & 0.20 & 0.21 & 0.19 & 0.17 & 0.15 & 0.16\\
+\bottomrule\end{tabular}}
+\end{table}

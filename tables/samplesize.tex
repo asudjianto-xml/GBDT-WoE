@@ -1,0 +1,14 @@
+\begin{table}[t]\centering\small
+\caption{Leaf-local estimation with evidence samples of different sizes, replicate 1. RMSE against the class-level oracle for the class geometry at the selected $(\kappa,\lambda)$, and for global WoE computed from the same subsample. The last row gives the median default-class effective sample size at 100{,}000 records.}
+\label{tab:samplesize}
+\resizebox{\linewidth}{!}{\begin{tabular}{@{}lrrrrrr@{}}\toprule
+Evidence records & Revolving & Delinq. & File age & Seeking & Install. & Public rec.\\\midrule
+2{,}500 & 0.62 & 0.32 & 0.41 & 0.36 & 0.63 & 0.06\\
+10{,}000 & 0.51 & 0.19 & 0.39 & 0.22 & 0.32 & 0.07\\
+30{,}000 & 0.36 & 0.17 & 0.29 & 0.16 & 0.20 & 0.11\\
+100{,}000 & 0.22 & 0.14 & 0.23 & 0.15 & 0.16 & 0.08\\
+Global WoE, 100{,}000 & 0.92 & 0.58 & 0.39 & 0.62 & 0.77 & 0.13\\
+Global WoE, 2{,}500 & 1.01 & 0.66 & 0.45 & 0.71 & 0.98 & 0.14\\
+Default-class ESS, 100{,}000 & 170 & 171 & 357 & 271 & 1061 & 271\\
+\bottomrule\end{tabular}}
+\end{table}

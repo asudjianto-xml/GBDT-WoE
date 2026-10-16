@@ -1,0 +1,233 @@
+\section{Introduction}
+
+When an application is declined on the basis of a credit score, the bank needs to explain which characteristics of the credit record account for the unfavorable score. A familiar adverse characteristic, such as high revolving utilization, is not sufficient by itself to explain the decision. Its contribution depends on how the model uses that characteristic and on the comparison used to assess the applicant's score. For a credit analyst, the explanation should connect the scored disadvantage to identifiable features of the record, such as recent payment problems or heavy use of available credit.
+
+A conventional logistic scorecard makes this connection through characteristic points. Categories of utilization, delinquency and file age receive weight-of-evidence (WoE) values, which are multiplied by fitted regression coefficients to obtain their contributions to the score \citep{siddiqi,good}. WoE summarizes how common a category is among defaulters relative to non-defaulters. Its value is calculated for the category across the development population: utilization of 85 percent receives the same WoE value in a fifteen-year file with no delinquency as in a two-year file with recent past-due accounts. The regression coefficients account for the other characteristics in the scorecard, but they do not make the underlying WoE value specific to the applicant's remaining record.
+
+Gradient-boosted decision trees (GBDTs) can allow the relationship between utilization and default risk to vary with payment history, file age and other characteristics. Interpreting such a model requires distinguishing a characteristic's contribution to the fitted score from the additional information it supplies about default. Delinquency, inquiries and utilization can convey overlapping information about financial stress. Once the payment history and inquiries are known, utilization may add relatively little information even when the model assigns it a substantial contribution to the applicant's score disadvantage. A marginal WoE table cannot establish how much information remains in that particular context.
+
+Conditional WoE addresses this question by comparing default odds with and without knowledge of the characteristic, given the rest of the credit record. The comparison without revolving information averages over the revolving profiles found among applicants with the same remaining characteristics. It does not assume a zero balance or an unused credit line. A positive conditional WoE means that learning the applicant's revolving profile raises default odds relative to that comparison; a negative value means that it lowers them. We assess balance, limit and utilization together because they describe the same exposure and are linked by an accounting identity. This grouping avoids treating utilization as additional information when balance and limit already determine it.
+
+Explaining the score shortfall involves a further choice: the applicants against whom the declined record is compared. Passing applicants provide observed credit profiles with more favorable scores, and an attribution allocates the score difference across characteristics. Regulation B and its Official Interpretations describe comparisons with applicants at or slightly above the passing score, as well as comparisons with all applicants, among the methods for selecting reasons. The reasons must relate to the factors actually considered or scored; the creditor must provide a statement of specific reasons or disclose the applicant's right to obtain one \citep{regb,interp}. The passing comparison and the conditional-risk comparison serve different purposes. One accounts for a difference between scored records; the other measures the default information added by a characteristic after the remaining record is known.
+
+The distinction has a concrete consequence in our simulation. An applicant with a recent serious delinquency and revolving utilization of 53 percent has delinquency as the largest contribution to the score gap against a broad sample of near-passing applicants. Among passing applicants with more similar delinquency histories, mean utilization is 27 percent and revolving credit becomes the largest contribution. The applicant's record and the fitted model have not changed. The change in the leading factor follows from the credit profiles used for comparison. Section~\ref{sec:case} examines this case, including the favorable characteristics that offset part of the applicant's disadvantage.
+
+We estimate conditional WoE using separate models fitted with and without a characteristic, regressions of the full model's predicted probabilities and class frequencies among similar records. A bureau-style simulation allows their errors to be measured against numerically computed population evidence. We also examine how overlapping information affects the allocation of total evidence and how restricting performance data to booked accounts changes the comparison. The FICO HELOC application examines the estimated evidence in actual credit records and its relation to attribution against passing applicants.
+
+\input{sections/summary_of_findings}
+
+\section{Related work}\label{sec:related}
+
+Good's log likelihood ratio measures evidence for one outcome relative to another \citep{good}. Scorecard WoE applies this idea to a characteristic class before fitting a logistic regression \citep{siddiqi}. The regression estimates joint score coefficients, but the class WoE itself remains a marginal population summary. The conditional definition below asks what the observed class or block adds after specified other characteristics are known.
+
+Shapley attribution allocates a model output or contrast by averaging a characteristic's contribution over possible orders of entry \citep{lundberg,treeshap}. The result depends on what replaces the absent characteristics \citep{baseline,covert}. An observational construction averages over their conditional distribution; an interventional construction draws them independently of the observed characteristics. Both use a model and a distribution, but they answer different comparison questions \citep{janzing,truedata,aas}. Baseline Shapley fixes absent characteristics to a reference record \citep{baseline}. Nair et al.\ use passing references to explain adverse credit decisions \citep{nair}; companion manuscripts examine how leaf proximity and kernel similarity change that reference population \citep{aarcgbdt,aarcneural}. We retain this fitted-score comparison while studying conditional default evidence separately.
+
+The direct estimator is a pointwise form of leave-one-covariate-out (LOCO) importance \citep{loco}, which compares a predictor fitted with and without a covariate. Removal by retraining is one of the removal mechanisms catalogued by \citet{covert}. The leaf-local estimator builds on the proximity kernel of random forests \citep{breiman}, the fraction of trees in which two records share a terminal node, and on the use of forest-derived weights for local estimation in generalized random forests \citep{grf}. Unlike those uses, the target here is a ratio of class-conditional distributions of a held-out characteristic, and the kernel is constructed from an ensemble that excludes that characteristic.
+
+\section{Setup and notation}\label{sec:setup}
+
+Let $Y=1$ denote default within the performance window and $Y=0$ its absence. The applicant's credit record $X=(X_1,\ldots,X_J)$ is divided into $J$ characteristic blocks. A block may contain several fields that must be interpreted together. Revolving limit, balance and utilization form one block because utilization is the ratio of the other two, and replacing one without the others would produce a record that no applicant could have. For a set $S\subseteq[J]=\{1,\ldots,J\}$, $x_S$ denotes the fields of the blocks in $S$, and $x_{-j}$ denotes all blocks except $j$.
+
+The production model is a GBDT whose margin is recalibrated to estimated default log odds $f(x)$. An application is declined when $f(x)>c$. The adverse action comparison uses passing references $r$ with $c-\delta<f(r)\le c$, observed applicants whose estimated risk is at or just below the cutoff. The applicant's excess estimated default log odds relative to reference $r$ is
+\begin{equation}\label{eq:gap}
+D_f(x,r)=f(x)-f(r)>0 .
+\end{equation}
+An attribution of the fitted decision allocates $D_f$ across blocks. A block with a positive allocation raises the applicant's estimated default odds relative to the reference.
+
+Evidence is defined from the population distribution instead of the fitted model. Throughout, the conditional probabilities $\Prb(Y=1\mid x_S)$ are assumed to lie strictly between zero and one, and the conditional densities of the blocks are assumed positive for both outcome classes on the records considered, so that every log ratio below is finite. With $\pi=\Prb(Y=1)$, the weight of evidence of the whole record is
+\begin{equation}\label{eq:joint}
+W(x)=\log\frac{p(x\mid Y=1)}{p(x\mid Y=0)}=\logit\Prb(Y=1\mid x)-\logit\pi ,
+\end{equation}
+which follows from Bayes' rule. If $f$ equals the true default log odds, then $f(x)-f(r)=W(x)-W(r)$. Otherwise the two differences need not agree.
+
+\section{Conditional weight of evidence}\label{sec:evidence}
+
+\subsection{Definition}
+
+Suppose, as a numerical illustration, that applicants with the same remaining credit characteristics have a default probability of 10 percent. Including the applicant's revolving information raises that probability to 20 percent. The default odds rise from $0.10/0.90$ to $0.20/0.80$, a factor of 2.25. The revolving block supplies $\log(2.25)=0.81$ units of conditional evidence. This is a comparison of risk assessments before and after the information is known. It does not specify a passing applicant or describe the effect of an intervention on balance.
+
+For block $j$, the corresponding population quantity is
+\begin{equation}\label{eq:cwoe}
+W_j(x)=\log\frac{p(x_j\mid Y=1,x_{-j})}{p(x_j\mid Y=0,x_{-j})}=\logit\Prb(Y=1\mid x)-\logit\Prb(Y=1\mid x_{-j}).
+\end{equation}
+The second equality follows from Bayes' rule. The reduced probability averages over the values of block $j$ that occur among records with the same $x_{-j}$; leaving the block unobserved does not mean setting its fields to zero or to a missing-value code. A positive $W_j$ means the observed block raises default odds relative to that conditional average, and a negative value means it lowers them. The prior $\pi$ cancels from the likelihood ratio. Values near zero occur when the block is unremarkable given the rest of the record or when the other fields already determine it. If utilization were separated from balance and limit, for example, it would add no information because those fields determine it.
+
+The definition therefore depends on the grouping of fields. Within-block identities are preserved by treating balance, limit and utilization together. For local estimation, the comparison records must be selected using the remaining blocks: a neighborhood built from the full model can also select on the block whose evidence is being estimated. That selection changes the comparison distribution.
+
+\subsection{Additivity}
+
+Two duplicate indicators of the same delinquency explain why the leave-one-block-out values need not add. Removing either indicator leaves the information in the other, so each has zero conditional evidence even though the delinquency is informative. By contrast, a pair of characteristics can be informative only when observed together. Removing either then removes the joint information. Regression-weighted scorecard points add to a score by its specification; these conditional evidence values have no such constraint.
+
+\begin{proposition}[Non-additivity in both directions]\label{prop:nonadd}
+The sum $\sum_jW_j(x)$ can be smaller or larger in absolute value than $W(x)$.
+\end{proposition}
+\begin{proof}
+Redundancy. Let $X_1=X_2=Z$ for a binary $Z$ with $W(z)\neq0$ for some $z$. Each block is determined by the other, so $p(x_1\mid y,x_2)=1$ for both classes on the support and $W_1=W_2=0$, while $W(x)=W(z)\neq0$.
+Synergy. Let $X_1,X_2$ be independent fair bits and let $\Prb(Y=1\mid x)=\sig(a+b\,\ind\{x_1\neq x_2\})$ with $b\neq0$. Then $\Prb(Y=1\mid x_1)$ and $\Prb(Y=1\mid x_2)$ both equal $\pi$, so $W_1(x)=W_2(x)=W(x)$ and $\sum_jW_j(x)=2W(x)$.
+\end{proof}
+
+The two examples show that the discrepancy can take either sign. They do not supply a rule that classifies an applicant as redundant or synergistic from the sign of $\sum_jW_j(x)-W(x)$, because that sign also depends on the sign of $W(x)$ and on how dependence and interaction combine across several blocks. Section~\ref{sec:results} reports how often each sign occurs in the simulation.
+
+An allocation of total evidence must also assign information that several blocks share. Imagine revealing the blocks one at a time. In the duplicate-indicator example, the first indicator supplies the delinquency evidence and the second adds nothing. Reversing the order reverses their allocations; averaging the two orders divides the evidence equally. For an ordering $\rho$ with $S_{k-1}=\{\rho(1),\ldots,\rho(k-1)\}$, the general chain rule is
+\begin{equation}\label{eq:chain}
+W(x)=\sum_{k=1}^J\log\frac{p(x_{\rho(k)}\mid Y=1,x_{S_{k-1}})}{p(x_{\rho(k)}\mid Y=0,x_{S_{k-1}})} .
+\end{equation}
+The total does not depend on the ordering, but the term assigned to each block does. Averaging over orderings removes that dependence. Define the coalition evidence $V_x(S)=\logit\Prb(Y=1\mid x_S)-\logit\pi$, the evidence of the blocks in $S$ alone, with $V_x(\varnothing)=0$ and $V_x([J])=W(x)$. The Shapley value of block $j$ in this game,
+\begin{equation}\label{eq:shapley_evidence}
+E_j(x)=\sum_{S\subseteq[J]\setminus\{j\}}\frac{|S|!\,(J-|S|-1)!}{J!}\bigl[V_x(S\cup\{j\})-V_x(S)\bigr],
+\end{equation}
+is the average over orderings of the chain-rule term of block $j$, and $\sum_jE_j(x)=W(x)$ by the efficiency property. Each increment $V_x(S\cup\{j\})-V_x(S)$ is the conditional evidence of block $j$ given only the blocks in $S$, and $W_j(x)$ is the increment for $S=[J]\setminus\{j\}$. We call
+\begin{equation}\label{eq:shared}
+H_j(x)=E_j(x)-W_j(x)
+\end{equation}
+the coalition excess of block $j$: its evidence averaged over all orders of entry minus its evidence when it enters last. In the redundancy example, $E_1=E_2=W(x)/2$ and $W_1=W_2=0$, so $H_j=W(x)/2$, which is negative for a favorable record with $W(x)<0$. In the synergy example, $E_j=W(x)/2$ and $W_j=W(x)$, so $H_j=-W(x)/2$. The sign of $H_j$ therefore does not by itself identify redundancy or synergy, and it is used below only as a defined contrast between two allocations of the same evidence. The Shapley construction is standard; what is specific here is the game, whose value function is a population log likelihood ratio.
+
+\subsection{Relation to model Shapley values}
+
+A model can recover the same evidence allocation if its probabilities describe the population and absent characteristics are averaged over the appropriate conditional distribution. The averaging scale matters: the log odds of an average default probability need not equal the average log odds.
+
+\begin{proposition}\label{prop:modelgame}
+Let $f^\ast(x)=\logit\Prb(Y=1\mid x)$ and define the observational model game $v(S)=\logit\E[\sig(f^\ast(X))\mid X_S=x_S]$. Then $v(S)-v(\varnothing)=V_x(S)$ for every $S$, and the Shapley values of $v$ equal $E_j(x)$. The game $v'(S)=\E[f^\ast(X)\mid X_S=x_S]$, which averages log odds instead of probabilities, differs from $v$ in general, and interventional or baseline games, which replace $X_{-S}$ by values not drawn from its conditional distribution, also differ from $v$ in general.
+\end{proposition}
+\begin{proof}
+By the tower property, $\E[\sig(f^\ast(X))\mid x_S]=\E[\Prb(Y=1\mid X)\mid x_S]=\Prb(Y=1\mid x_S)$, so $v(S)=\logit\Prb(Y=1\mid x_S)$ and $v(\varnothing)=\logit\pi$. Shapley values are unchanged by adding a constant to the game. For the second game, suppose $f^\ast(X)$ takes the values $0$ and $4$ with equal probability given $x_S$. Then $v'(S)=2$, while $v(S)=\logit\{(\sig(0)+\sig(4))/2\}=1.05$.
+\end{proof}
+
+Proposition~\ref{prop:modelgame} gives sufficient conditions under which evidence and attribution agree: the model equals the true posterior, absent blocks are integrated over their conditional distribution and the integration is done on the probability scale. It does not show that agreement is impossible otherwise. The attribution game used for adverse action in Section~\ref{sec:aarc} can be evaluated with the true posterior, as in the simulation below, but it sets the absent blocks to the values of a passing reference and averages on the log-odds scale. It therefore differs from the coalition evidence game in its reference distribution and its averaging scale.
+
+\subsection{Booked and through-the-door populations}
+
+A lender usually observes performance only for booked accounts. Even if the default probability for a fully specified record is unchanged by booking, the distribution of an omitted characteristic can change. A policy that screens out high utilization, for example, can leave lower utilization among booked applicants with the same other characteristics. This changes the reduced-risk comparison used in conditional evidence.
+
+Suppose booking has probability $s(x)$ and is independent of the outcome given the observed record. Then $\Prb(Y=1\mid x,\text{booked})=\Prb(Y=1\mid x)$ wherever $s(x)>0$. This preserves a population posterior on that support; a fitted model still faces finite samples, restricted support and possible misspecification.
+
+\begin{proposition}\label{prop:selection}
+Under selection on the record, at a record with $s(x)>0$ and $\E[s(X)\mid x_{-j}]>0$, the conditional evidence of block $j$ in the booked population is
+\begin{equation}\label{eq:booked}
+W^{b}_j(x)=\logit\Prb(Y=1\mid x)-\logit\frac{\E[\Prb(Y=1\mid X)\,s(X)\mid x_{-j}]}{\E[s(X)\mid x_{-j}]},
+\end{equation}
+where the expectations are over $X_j$ given $x_{-j}$ in the through-the-door population. It equals $W_j(x)$ for all $x$ if $s$ does not depend on $x_j$, and more generally whenever $\Prb(Y=1\mid X)$ and $s(X)$ are uncorrelated given $x_{-j}$.
+\end{proposition}
+\begin{proof}
+The booked density of $X_j$ given $x_{-j}$ is proportional to $p(x_j\mid x_{-j})s(x)$. Integrating $\Prb(Y=1\mid X)$ against it gives the second term. The ratio equals $\E[\Prb(Y=1\mid X)\mid x_{-j}]$ when the conditional covariance of $\Prb(Y=1\mid X)$ and $s(X)$ is zero.
+\end{proof}
+
+If, within the stratum defined by $x_{-j}$, the booking probability decreases as risk increases, then $\Prb(Y=1\mid X)$ and $s(X)$ are negatively correlated given $x_{-j}$, the booked conditional default rate given $x_{-j}$ is lower and $W^b_j$ exceeds $W_j$. A lower overall default rate among booked accounts does not by itself establish this conditional relationship. The difference is confined to blocks on which $s$ depends, and it does not vanish for applicants inside the booked support, because the integral runs over values of $X_j$ that the policy would have declined.
+
+\section{Estimators}\label{sec:estimation}
+
+\subsection{Direct estimator}
+
+To assess what revolving credit adds, the direct estimator compares default risk fitted from the full record with risk fitted from the remaining characteristics. The reduced model describes applicants whose delinquency, file age and other blocks are known but whose revolving information is not supplied. Both models are fitted to the same outcome in the same population and recalibrated by Platt scaling on a separate calibration sample \citep{platt}. Their log-odds difference is
+\begin{equation}\label{eq:direct}
+\widehat W_j^{\rm dir}(x)=\logit\hat p_F(x)-\logit\hat p_{-j}(x_{-j}).
+\end{equation}
+The reduced model is refitted without the block. Supplying missing values to the full model would instead use branches learned for missing data, which need not represent an average over the omitted characteristic. The two fits have separate estimation errors and can differ even when the block adds no population evidence. Probability evaluations are clipped to $[10^{-4},1-10^{-4}]$ where converted numerically to log odds; calibrated margins used directly retain their log-odds values. The library comparison also excludes any derived categorical combination containing a removed field.
+
+\subsection{Projection estimator}
+
+The reduced risk can also be estimated by averaging the full model's probabilities among records with the same remaining characteristics. With the true posterior, this follows from the tower property:
+\begin{equation}\label{eq:tower}
+\Prb(Y=1\mid x_{-j})=\E\bigl[\Prb(Y=1\mid X)\mid X_{-j}=x_{-j}\bigr],
+\end{equation}
+The projection estimator uses the full model's probability as the regression target. A GBDT with the cross-entropy loss and soft targets $\hat p_F(X_i)\in(0,1)$ is fitted on the block-excluded fields of a sample not used to fit $\hat p_F$, giving $\tilde p_{-j}(x_{-j})$, and
+\begin{equation}\label{eq:proj}
+\widehat W_j^{\rm proj}(x)=\logit\hat p_F(x)-\logit\tilde p_{-j}(x_{-j}).
+\end{equation}
+The minimizer of expected cross-entropy with a soft target is the conditional mean of the target, so $\tilde p_{-j}$ estimates $\E[\hat p_F(X)\mid x_{-j}]$, which equals Eq.~\eqref{eq:tower} if $\E[\hat p_F(X)-\Prb(Y=1\mid X)\mid x_{-j}]=0$, in particular if $\hat p_F$ equals the true posterior. For the true posterior $p(X)=\Prb(Y=1\mid X)$,
+\[
+\operatorname{Var}(Y\mid x_{-j})=\E\bigl[p(X)(1-p(X))\mid x_{-j}\bigr]+\operatorname{Var}\bigl(p(X)\mid x_{-j}\bigr),
+\]
+and a soft target equal to $p(X)$ removes the first term. How much this reduces variance depends on the size of the first term relative to the second; the first term is small when the outcome is nearly determined by the record, even at low prevalence. With the estimated target $\hat p_F$, its estimation error enters the regression as well. Both terms of Eq.~\eqref{eq:proj} inherit the errors of $\hat p_F$, and the estimate is the conditional evidence implied by the full model and the population distribution of credit records.
+
+\subsection{Error of a log-odds difference}
+
+An accurate difference need not imply equally accurate probabilities in both terms. Let $e_F=\logit\hat p_F-\logit p$ be the full-model error and $e_{-j}$ the error of the reduced log odds, using either estimator. At the same record,
+\begin{equation}\label{eq:error_difference}
+\widehat W_j-W_j=e_F-e_{-j},\qquad
+\E[(\widehat W_j-W_j)^2]=\E[e_F^2]+\E[e_{-j}^2]-2\E[e_Fe_{-j}].
+\end{equation}
+The expectations here are over the evaluation records. A smaller reduced-model error improves the difference, but errors in the same direction can also cancel. Projection learns from the full model and can share its errors. The experiments report both reduced-posterior error and the cross-product term to distinguish these effects.
+
+\subsection{Leaf-local estimator}
+
+A frequency-based estimate asks how often the applicant's class of a characteristic occurs among defaulters and non-defaulters with similar remaining records. The challenge is obtaining a sufficiently local comparison with enough observations in both outcome classes. We use a block-excluded tree ensemble $g_{-j}$ to weight similarity in the remaining blocks.
+
+This estimator first groups block values into classes. For a multi-field block, the classes are quantile intervals of a logistic index fitted from transformed block fields on the development sample. If $b(x_j)$ is the applicant's class, the target is
+\begin{equation}\label{eq:binwoe}
+W_j^{B}(x)=\log\frac{\Prb(X_j\in b(x_j)\mid Y=1,x_{-j})}{\Prb(X_j\in b(x_j)\mid Y=0,x_{-j})},
+\end{equation}
+This class-level quantity averages over values within the class. It agrees throughout a class with Eq.~\eqref{eq:cwoe} when the conditional density ratio is constant there; otherwise coarsening changes the target.
+
+Let $L_t(z)$ be the leaf reached by $z=x_{-j}$ in tree $t$ of $g_{-j}$, and let
+\begin{equation}\label{eq:kernel}
+K_{-j}(x,x')=\frac1T\sum_{t=1}^T\ind\{L_t(x_{-j})=L_t(x'_{-j})\}
+\end{equation}
+be the fraction of trees in which two records share a leaf \citep{breiman}. The kernel depends on $x$ only through $x_{-j}$. For an estimation sample disjoint from the samples used to fit $g_{-j}$ and choose the classes, define kernel-weighted counts
+\begin{equation}\label{eq:counts}
+n_{yb}(x)=\sum_iK_{-j}(x,x_i)^{\kappa}\,\ind\{Y_i=y,\,b(x_{ij})=b\},\qquad n_y(x)=\sum_bn_{yb}(x).
+\end{equation}
+With $\kappa=1$, $n_{yb}(x)$ is the number of estimation records of class $(y,b)$ sharing a leaf with the applicant, averaged over trees. Each root-to-leaf path has at most as many splits as the tree depth, so within a single leaf the records still differ in the fields not split on along that path. Averaging over trees does not remove that variation, while raising the kernel to a power $\kappa>1$ concentrates weight on records that share leaves with the applicant in many trees. The counts are on the scale of record counts, which fixes the scale of the smoothing constant. The estimate shrinks toward the class-specific global class frequencies $q^{(y)}_b=\Prb(b(X_j)=b\mid Y=y)$:
+\begin{equation}\label{eq:leafwoe}
+\widehat p(b\mid y,x)=\frac{n_{yb}(x)+\lambda q^{(y)}_b}{n_y(x)+\lambda}=\frac{n_y(x)}{n_y(x)+\lambda}\,\frac{n_{yb}(x)}{n_y(x)}+\frac{\lambda}{n_y(x)+\lambda}\,q^{(y)}_b,\qquad \widehat W_j^{\rm leaf}(x)=\log\frac{\widehat p(b(x_j)\mid1,x)}{\widehat p(b(x_j)\mid0,x)} .
+\end{equation}
+As $\lambda\to\infty$, the estimate tends to the global (marginal) WoE of the class, the scorecard quantity. A common smoothing distribution for both outcome classes would instead shrink the estimate toward zero. With $\lambda=0$, the estimate is a ratio of within-class frequencies and does not depend on the local default rate. With $\lambda>0$, the class totals determine how far each class-conditional frequency is shrunk, and the class with fewer local records, usually the defaulters, is shrunk more.
+
+The exponent and smoothing constant balance locality against sampling noise. We select $(\kappa,\lambda)$ by the class-balanced held-out log likelihood $\tfrac12\sum_y\overline{\log\widehat p(b_i\mid y,x_i)}$ on the calibration sample, where the bar averages over records with outcome $y$. Equal weighting keeps the larger non-default class from dominating the criterion. No oracle evidence is used in this choice. The class-specific effective sample size, $\mathrm{ESS}_y(x)=(\sum_{i:Y_i=y}K_i^\kappa)^2/\sum_{i:Y_i=y}K_i^{2\kappa}$, measures how concentrated the weights are and is reported alongside the weighted counts.
+
+Two geometries are compared. The first uses the block-excluded default model $g_{-j}$ from the direct estimator, whose leaves separate records by estimated risk given $x_{-j}$. The estimand, however, requires neighborhoods in which the class-conditional distribution of $X_j$ is approximately constant, and two contexts with similar risk can have different distributions of the excluded block. The second geometry is a multiclass GBDT fitted on the development sample to predict the class $b(X_j)$ from $x_{-j}$, whose leaves separate records by the distribution of the excluded block. Neither geometry is designed for the ratio in Eq.~\eqref{eq:binwoe} itself, and the comparison is empirical.
+
+The leaves supply neighborhoods, not evidence values. Their fitted outputs depend on loss gradients and Hessians; a leaf output is not itself a class likelihood ratio. Evidence is obtained from the separate outcome-class frequencies in those neighborhoods.
+
+\subsection{Coalition evidence}
+
+Allocating evidence over all entry orders requires a reduced probability for every subset of blocks. A projection regression on $x_S$ estimates $\E[\hat p_F(X)\mid x_S]$, the full-model-implied counterpart of $\Prb(Y=1\mid x_S)$. We set $\widehat V_x(S)=\logit\tilde p_S(x_S)-\logit\hat\pi$ for proper nonempty subsets and use $\hat p_F$ for the full set, with $\widehat V_x(\varnothing)=0$. Here $\hat\pi$ is the evidence-sample default rate. Replacing it by the mean full-model probability shifts every nonempty coalition value by a common constant and each Shapley allocation by that constant divided by $J$. In the simulation the change is at most 0.007 logit units per block. Six blocks require 62 reduced regressions; the leave-one-block-out projections are the six subsets of size five. More blocks would require an approximation to the order average, which is not studied here.
+
+\section{Adverse action reasons}\label{sec:aarc}
+
+\subsection{Baseline Shapley attribution}
+
+A passing reference supplies an observed alternative for each characteristic group. To attribute the applicant's score disadvantage, the comparison replaces whole blocks of the reference with those of the applicant and evaluates the change in the fitted score. Averaging a block's increment over replacement orders gives its baseline Shapley value \citep{baseline,nair}. Formally, $v_{x,r}(S)=f(x_S,r_{-S})-f(r)$, and the allocations $\phi_j^f(x,r)$ sum to $D_f(x,r)$. Averaging over references with nonnegative weights $\omega_r$ summing to one gives
+\begin{equation}\label{eq:attr}
+C^f_j(x)=\sum_{r\in\mathcal R(x)}\omega_r\,\phi^f_j(x,r),\qquad \sum_jC^f_j(x)=\sum_r\omega_rD_f(x,r).
+\end{equation}
+The block with the largest $C^f_j$ is the leading candidate reason. Exact reconciliation establishes that the allocation accounts for the specified contrast. It does not establish that the reference policy is appropriate, nor that a multi-field block identifies the field to be named in a notice: a positive revolving allocation does not by itself distinguish high utilization from a high balance or a low limit. Blocks are replaced whole, so each hybrid preserves the identities within a block. Plausibility of combinations across blocks is not checked. With six blocks, each reference requires 64 model evaluations, and $C^f$ is computed exactly. The group-level Shapley value of a block does not in general equal the sum of the feature-level Shapley values of its fields, so feature-level TreeSHAP output cannot in general be aggregated to obtain it.
+
+Both reference policies use observed applicants in the passing band. The score-band policy samples them uniformly. The proximity policy selects those sharing the most leaves with the applicant in the full model \citep{aarcgbdt}. The first asks how the applicant differs from the broader near-passing group; the second emphasizes records similar in the characteristics used by the fitted trees. Neither choice follows from the Shapley allocation rule.
+
+For fixed applicants and references, positive affine recalibration $f=a+b\,m$ scales every block attribution by $b$: $C_j^f=bC_j^m$ for $b>0$. It leaves the leading block and the relative margin unchanged because the intercept cancels and all increments receive the same multiplier. The passing band has fixed width in calibrated log odds, however, so recalibration can change reference membership. Conditional evidence also responds differently: the direct method uses separately recalibrated fits and projection averages probabilities before taking log odds.
+
+\subsection{Evidence comparisons with passing references}
+
+Attribution compares the applicant with passing references. Conditional evidence compares the applicant's block with the blocks found among records that share the applicant's other characteristics. A reference-based form of conditional evidence evaluates the evidence of each reference's block in the applicant's context:
+\begin{equation}\label{eq:comparative}
+C^W_j(x)=\sum_r\omega_r\bigl[\widehat W_j(x_j;x_{-j})-\widehat W_j(r_j;x_{-j})\bigr].
+\end{equation}
+This holds the applicant's other blocks fixed and varies one block, as one step of the attribution game does. For the direct and projection estimators both terms use the same reduced-risk prediction, which cancels in the difference.
+
+\begin{proposition}\label{prop:collapse}
+If $\widehat W_j(x_j;x_{-j})=\hat g(x_j,x_{-j})-\hat h(x_{-j})$ for some functions $\hat g$ and $\hat h$, then
+\[
+C^W_j(x)=\sum_r\omega_r\bigl[\hat g(x_j,x_{-j})-\hat g(r_j,x_{-j})\bigr],
+\]
+and $\hat h$ does not enter. For the direct and projection estimators, $\hat g=\logit\hat p_F$, so $C^W_j$ is the average change in the full model's log odds when block $j$ of the applicant is replaced by the reference's block. For the leaf-local estimator, $C^W_j$ is the average difference in log ratios of the smoothed class-conditional frequencies of the applicant's and the reference's classes, computed in the applicant's context, in which the normalizers $n_y(x)+\lambda$ cancel.
+\end{proposition}
+\begin{proof}
+Both terms of Eq.~\eqref{eq:comparative} use the same context $x_{-j}$, so $\hat h(x_{-j})$ cancels. In the leaf case, both terms of Eq.~\eqref{eq:leafwoe} are evaluated at the same $x$, so $n_1(x)+\lambda$ and $n_0(x)+\lambda$ cancel from the difference.
+\end{proof}
+
+When $\hat p_F$ is the production model, the direct and projection forms of $C^W_j$ reduce to $v_{x,r}([J])-v_{x,r}([J]\setminus\{j\})$, the increment of block $j$ when it is replaced last in the attribution game. They describe the fitted model, not default evidence, and differ from $C^f_j$ only because the Shapley value averages this increment with the increments at other orders of entry. The leaf-local form retains class frequencies estimated from outcomes and does not reduce to a model swap, but it compares coarse classes rather than records. Conditional evidence is therefore reported for the applicant alone, as $W_j(x)$ and $E_j(x)$, alongside the attribution against passing references.
+
+\subsection{Hypotheses}
+
+The simulation permits direct assessment of evidence accuracy because its population quantities can be computed numerically. The real-data study examines estimator agreement, local sample support and the interpretation of evidence alongside score attribution. The empirical hypotheses are:
+\begin{itemize}
+\item[H1.] The direct and projection estimators recover the sign and magnitude of $W_j(x)$, and the leaf-local estimator recovers $W^B_j(x)$, with error small relative to the variation of the oracle across applicants.
+\item[H2.] Leaf-local estimation improves on the global WoE of the block's class, and the improvement depends on the kernel exponent and the geometry.
+\end{itemize}
+
+\input{sections/experiments}
+
+\input{sections/results}
+
+\input{sections/discussion}
