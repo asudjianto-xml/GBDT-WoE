@@ -26,6 +26,7 @@ BAND = 0.30          # passing band width on the logit scale
 N_REF = 50
 N_DECLINE = 400
 N_QUERY = 3000
+N_CIV = 1000         # random test applicants with oracle coalition evidence (information value)
 N_BOOT = 10
 LAMBDAS = [0.1, 0.5, 2, 8, 32]
 KAPPAS = [1, 2, 4, 8, 16, 32]
@@ -215,6 +216,18 @@ def main(seed, quick=False):
           for j in range(J)]
     W_dir_booked = np.stack([Fb.logit(Xq) - Rb[j].logit(Xq) for j in range(J)], 1)
 
+    # --- coalition evidence on random test applicants, for conditional information value.
+    # Runs last with its own generator, so the quantities above are unchanged.
+    log("coalition oracle, random applicants")
+    csel_civ = np.random.default_rng(seed + 17).choice(len(Xt), N_CIV, replace=False)
+    Xv = Xt[csel_civ]
+    Vt_civ = es.clip_logit(bs.parallel(O, "coalition", Xv, seed=seed + 15)) - logit(pi_true)
+    Vt_civ[:, 0] = 0.0
+    Vh_civ = np.zeros((len(Xv), 1 << J))
+    for mask in range(1, allm):
+        Vh_civ[:, mask] = es.clip_logit(P[mask].booster.predict(es.xgb.DMatrix(Xv[:, P[mask].columns]))) - logit(pi_hat)
+    Vh_civ[:, allm] = F.logit(Xv) - logit(pi_hat)
+
     is_decl = np.isin(qsel, dsel)
     a_pos = np.array([np.flatnonzero(qsel == d)[0] for d in dsel])
     np.savez_compressed(
@@ -226,7 +239,8 @@ def main(seed, quick=False):
         legacy_q=bs.legacy_score(xq),
         E_true=E_true, E_hat=E_hat, Vt=Vt, Vh=Vh, W_loo_true_a=W_loo_true_a, W_loo_hat_a=W_loo_hat_a,
         CW=CW, swap=swap, Xa=Xa, refs_score=refs["score"], refs_proximity=refs["proximity"],
-        band=band, cut=cut, **attr)
+        band=band, cut=cut, csel_civ=csel_civ, Vt_civ=Vt_civ, Vh_civ=Vh_civ, ptrue_civ=pt[csel_civ],
+        y_civ=yt[csel_civ], **attr)
     summary["kernel_selected"] = sel_par
     summary["kernel_loglik"] = sel_curves
     summary["kappas"], summary["lambdas"], summary["ntrees"] = KAPPAS, LAMBDAS, ntrees

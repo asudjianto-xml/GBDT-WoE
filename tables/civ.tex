@@ -1,0 +1,25 @@
+\begin{table}[t]\centering\small\color{dbblue}
+\caption{Conditional information value (natural units). Simulation: oracle and projection values on 1{,}000 random test applicants per replicate, class means weighted by the true default probability; means over 5 replicates, replicate standard deviations at most 0.10 for the oracle values. HELOC: projection estimates over the test records, means over 10 splits. Marginal values use the evidence of the block alone, $V_x(\{j\})$, or its projection estimate.}
+\label{tab:civ}
+\resizebox{\linewidth}{!}{\begin{tabular}{@{}lrrrrrr@{}}\toprule
+\multicolumn{7}{@{}l}{\emph{Simulation}}\\
+ & Revolving & Delinq. & File age & Seeking & Install. & Public rec.\\\midrule
+Marginal IV, oracle & 1.43 & 1.51 & 0.07 & 0.75 & 0.68 & 0.12\\
+Conditional IV $\mathrm{IV}_j$, oracle & 0.32 & 0.80 & 0.16 & 0.08 & 0.01 & 0.05\\
+Coalition IV $\mathrm{IV}^E_j$, oracle & 0.74 & 1.04 & 0.11 & 0.32 & 0.24 & 0.07\\
+Conditional IV $\mathrm{IV}_j$, projection & 0.31 & 0.79 & 0.14 & 0.08 & 0.01 & 0.04\\
+Coalition IV $\mathrm{IV}^E_j$, projection & 0.72 & 1.04 & 0.10 & 0.30 & 0.23 & 0.06\\
+\midrule
+Joint IV $\E[f^\ast(X)\mid Y=1]-\E[f^\ast(X)\mid Y=0]$ & \multicolumn{6}{c}{2.51 (projection 2.45)}\\
+Sum of marginal / conditional / coalition IVs, oracle & \multicolumn{6}{c}{4.56 / 1.43 / 2.51}\\
+\midrule
+\multicolumn{7}{@{}l}{\emph{FICO HELOC}}\\
+ & Delinquency & File age & Trade vol. & Inquiries & Revolving & Installment\\\midrule
+Marginal IV, projection & 0.40 & 0.26 & 0.24 & 0.28 & 0.61 & 0.04\\
+Conditional IV $\mathrm{IV}_j$, projection & 0.31 & 0.13 & 0.04 & 0.15 & 0.36 & 0.02\\
+Coalition IV $\mathrm{IV}^E_j$, projection & 0.35 & 0.18 & 0.12 & 0.19 & 0.46 & 0.02\\
+\midrule
+Joint IV, projection & \multicolumn{6}{c}{1.32}\\
+Sum of marginal / conditional / coalition IVs & \multicolumn{6}{c}{1.83 / 1.02 / 1.32}\\
+\bottomrule\end{tabular}}
+\end{table}

@@ -102,6 +102,11 @@ def main(rep):
     lF = F.logit(Xq)
     W_dir = np.stack([lF - R[j].logit(Xq) for j in range(J)], 1)
     W_proj = np.stack([lF - predp(P[allm & ~(1 << j)], Xq) for j in range(J)], 1)
+    # coalition evidence for every test record (information value); uses no random numbers
+    Vq = np.zeros((len(Xq), 1 << J))
+    for mask in range(1, allm):
+        Vq[:, mask] = predp(P[mask], Xq) - logit(pi_hat)
+    Vq[:, allm] = lF - logit(pi_hat)
     W_leafY, W_leafX, W_glob = (np.empty((len(Xq), J)) for _ in range(3))
     ess_Y, ny_Y = np.empty((len(Xq), J, 2)), np.empty((len(Xq), J, 2))
     sel = {}
@@ -153,7 +158,7 @@ def main(rep):
     np.savez_compressed(OUT / f"heloc_rep{rep}.npz", W_dir=W_dir, W_proj=W_proj, W_leafY=W_leafY,
                         W_leafX=W_leafX, W_glob=W_glob, ess_Y=ess_Y, ny_Y=ny_Y,
                         ids_test=idx["test"], ids_decl=idx["test"][dsel], bq=bq, lF=lF, yq=yt, dsel=dsel,
-                        E_hat=E_hat, Vh=Vh, **attr)
+                        E_hat=E_hat, Vh=Vh, Vq=Vq, **attr)
     (OUT / f"heloc_rep{rep}.json").write_text(json.dumps(summary, indent=2, default=float))
     print(time.strftime("%H:%M:%S"), "rep", rep, "auc", round(summary["auc"], 4), flush=True)
 
